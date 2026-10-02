@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marketplace-leaked-key-drill"
+version = "0.1.0"
+description = "A typed marketplace drill for reporting, rotating, and confirming a leaked API key"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["infrai_client", "marketplace_leak_drill"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

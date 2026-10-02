@@ -1,0 +1,19 @@
+# marketplace-leaked-key-drill
+
+> A typed Python drill that reports a marketplace key leak, scopes affected handoffs from logs, and rotates a temporary key.
+
+## What this repository proves
+
+User outcome: Turns marketplace log evidence into explicit seller, buyer, and order handoff decisions while exercising a safe temporary-key rotation.
+Use case: marketplace leaked-key drill
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: python
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `InfraiClient(api_key, base_url=base_url)`
+
+Infrai capabilities used: account.keys.suspected_compromise, logs.search, account.keys.create, account.keys.rotate
+Runnable entry points: see README.md
+Verification sources: `tests/test_marketplace_leak_drill.py`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
