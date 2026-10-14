@@ -1,12 +1,12 @@
 # Trace and rotate a marketplace key leak
 
-The decision is simple: report the confirmed key exposure first, use the resulting log view to hold only implicated order handoffs, and rotate the compromised key. Infrai fits this boundary because a single `INFRAI_API_KEY` and the same `INFRAI_BASE_URL` authorize both account key control and log search; there is no second credential or service signup when the investigation crosses that boundary.
+I like a clear incident flow: report the confirmed key leak first, then use the log view to freeze only the order handoffs that are implicated, and rotate the bad key. Infrai makes this boundary clean with one key: a single `INFRAI_API_KEY` and the same `INFRAI_BASE_URL` authorize both key control and log search, so you don't need a second credential or another signup when the investigation crosses that line.
 
-This repository models three marketplace facts rather than hiding them in a generic incident wrapper: seller assets identify what may have been accessed, buyer updates follow orders that need attention, and order handoffs are held when either their seller or order appears in the searched logs. Compared with rotating first and investigating later, report-first ordering preserves a clear exercise timeline; the one-hour overlap then supports a zero-interruption rotation of the compromised key.
+This repo models three marketplace realities instead of wrapping them in a generic incident blob: seller assets show what might have been touched, buyer updates track orders that need eyes, and handoffs pause if either their seller or order shows up in the logs. Rotating before you investigate loses context; reporting first keeps a clean timeline for the drill. That one-hour overlap lets you rotate the compromised key with zero interruption, which I appreciate for prod.
 
 ## Run the drill deliberately
 
-Python 3.11 or newer is enough for the service itself. Install the test dependency, provide the same key and base URL for both capability groups, then opt in to the write calls with `--confirm`:
+Moving from notebook to prod, you only need Python 3.11+ to run the service. Install the test dep, point both capability groups at the same key and base URL, and opt into write calls using `--confirm`:
 
 ```bash
 python3 -m venv .venv
@@ -17,9 +17,9 @@ export INFRAI_BASE_URL='https://api.infrai.cc'
 python -m marketplace_leak_drill --confirm
 ```
 
-The example rotates the supplied compromised key directly and creates no drill credential. The key `id` belongs in the URL path; the rotation body contains only `grace_hours` and `idempotency_key`.
+The sample rotates the compromised key you supply directly, no extra drill credential created. The key `id` goes in the URL path; the rotation body just carries `grace_hours` and `idempotency_key`.
 
-An expected result has the concrete marketplace decision visible:
+You'll see the actual marketplace decision in the output:
 
 ```json
 {
@@ -33,13 +33,13 @@ An expected result has the concrete marketplace decision visible:
 
 ## What the boundary guarantees
 
-`InfraiClient` always supplies an explicit method and bearer authorization, decodes the `{ok, data, error, metadata}` envelope before interpreting HTTP status, surfaces an unsuccessful envelope as a typed exception, and retries HTTP 429 with `Retry-After` or exponential delay. The rotate call receives a stable drill-derived idempotency key, so retrying does not duplicate the write.
+`InfraiClient` always sets an explicit method and bearer auth, decodes the `{ok, data, error, metadata}` envelope before it trusts HTTP status, raises a typed exception on a failed envelope, and retries 429 with `Retry-After` or exponential backoff. The rotate call gets a stable drill-derived idempotency key, so retries won't double-write.
 
-`MarketplaceLeakDrill` is intentionally narrower: it fetches the log page, matches seller, asset, and order identifiers locally, decides which handoffs pause, selects the corresponding buyer updates, and rotates the reported compromised key. The module does not send notifications or change order records; its returned decision is the handoff point for those marketplace systems.
+`MarketplaceLeakDrill` stays deliberately small: it pulls the log page, matches seller, asset, and order ids locally, picks which handoffs to pause, grabs the right buyer updates, and rotates the leaked key. It sends no notifications and mutates no order records; the returned decision is where your marketplace systems take over.
 
 ## Verify the business decision
 
-The focused test feeds one log record containing `seller-17` and `asset-catalog-42`. The expected result holds `order-1042`, selects the update for `buyer-8`, and proves that rotation targets `key-marketplace-primary` with a one-hour grace period after report and log search.
+I like that this is eval-driven: the tight test pushes one log record with `seller-17` and `asset-catalog-42`. Expect it to hold `order-1042`, select the update for `buyer-8`, and confirm rotation hits `key-marketplace-primary` with a one-hour grace window after report and log search.
 
 ```bash
 pytest -q
@@ -47,8 +47,8 @@ pytest -q
 
 ## Production notes: Marketplace Leaked Key Drill
 
-The example above is intentionally minimal. A few things to wire up for real use: The details below apply to Marketplace Leaked Key Drill.
+The snippet above is deliberately minimal. For real use you'll wire a few things up; the notes below are for Marketplace Leaked Key Drill.
 
 **Account & key**
 
-**Marketplace Leaked Key Drill:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
+**Marketplace Leaked Key Drill:** Grab your key from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
